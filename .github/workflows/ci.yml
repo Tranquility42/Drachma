@@ -17,6 +17,11 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Pin npm itself: different npm versions can validate the same
+      # lockfile differently (seen with optional platform-specific deps),
+      # so "whatever npm ships with Node 22 today" isn't reproducible.
+      - run: npm install -g npm@10.9.4
+
       - run: npm ci
 
       - run: npm run lint
