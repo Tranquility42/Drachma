@@ -15,7 +15,7 @@ Registre budgétaire personnel — mensuel et annuel — utilisé comme projet d
 ## Démarrage local
 
 1. Copier `.env.local.example` vers `.env.local`.
-2. Récupérer les clés Supabase (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) depuis le dashboard Supabase (projet `drachma`).
+2. Récupérer les clés Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) depuis le dashboard Supabase (projet `drachma`).
 3. Lier Clerk au projet :
    ```bash
    npx clerk@latest init --framework next
