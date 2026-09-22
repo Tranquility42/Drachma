@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registre budgétaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    box-sizing: border-box;
+    --ink: #1e2a24;
+    --paper: #f5f2ea;
+    --paper-2: #ece7d9;
+    --line: #cfc6b0;
+    --emerald: #1f6f4a;
+    --emerald-soft: #e3efe6;
+    --slate: #35507a;
+    --slate-soft: #e4e9f1;
+    --gold: #a1791f;
+    --gold-soft: #f1e8d3;
+    --brick: #a63d28;
+    --brick-soft: #f4e3dd;
+    --muted: #6f6656;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #ece7d9;
+      --paper: #1b1f1c;
+      --paper-2: #232823;
+      --line: #3a4038;
+      --emerald: #6fbd94;
+      --emerald-soft: #1e2f26;
+      --slate: #8fa9d6;
+      --slate-soft: #1e2532;
+      --gold: #d9b463;
+      --gold-soft: #332a17;
+      --brick: #e08669;
+      --brick-soft: #33211b;
+      --muted: #9b9282;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #ece7d9;
+    --paper: #1b1f1c;
+    --paper-2: #232823;
+    --line: #3a4038;
+    --emerald: #6fbd94;
+    --emerald-soft: #1e2f26;
+    --slate: #8fa9d6;
+    --slate-soft: #1e2532;
+    --gold: #d9b463;
+    --gold-soft: #332a17;
+    --brick: #e08669;
+    --brick-soft: #33211b;
+    --muted: #9b9282;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100%;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 28px 18px 60px;
+  }
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 14px;
+    margin-bottom: 22px;
+  }
+  header.top h1 {
+    font-size: 1.55rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.2px;
+  }
+  header.top .sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.4;
+  }
+  .grand-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--brick-soft);
+    border: 1px solid var(--brick);
+    border-radius: 3px;
+    padding: 14px 16px;
+    margin-bottom: 26px;
+  }
+  .grand-total .label {
+    font-size: 0.95rem;
+    color: var(--muted);
+  }
+  .grand-total .value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: var(--brick);
+  }
+  section.ledger {
+    margin-bottom: 26px;
+  }
+  .ledger-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .ledger-head h2 {
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 0;
+  }
+  .ledger-head .cat-total {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+  .ledger.emerald .ledger-head .cat-total { color: var(--emerald); }
+  .ledger.slate .ledger-head .cat-total { color: var(--slate); }
+  .ledger.gold .ledger-head .cat-total { color: var(--gold); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    border-top: 1px solid var(--line);
+  }
+  th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  th.num, td.num { text-align: right; }
+  td { padding: 2px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr:last-child td { border-bottom: 1px solid var(--line); }
+  input.cell {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.92rem;
+    padding: 8px 6px;
+    border-radius: 2px;
+  }
+  input.cell.amount, input.cell.date {
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: right;
+    font-size: 0.88rem;
+  }
+  input.cell:focus {
+    outline: none;
+    background: var(--paper-2);
+  }
+  td.del {
+    width: 26px;
+    text-align: center;
+  }
+  .del-btn {
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 6px;
+  }
+  .del-btn:hover { color: var(--brick); }
+  .add-row {
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 1px dashed var(--line);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 9px 10px;
+    margin-top: 8px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .add-row:hover { border-color: var(--muted); color: var(--ink); }
+
+  .annual-note {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  footer.bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .bar button {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 8px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .bar button:hover { color: var(--ink); border-color: var(--ink); }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    padding: 9px 16px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Registre budgétaire</h1>
+    <div class="sub">mensuel<br>modifiable</div>
+  </header>
+
+  <div class="grand-total">
+    <div class="label">Total mensuel (fixe + crédit + autres)</div>
+    <div class="value" id="grandTotal">0 $</div>
+  </div>
+
+  <div id="sections"></div>
+
+  <section class="ledger" id="annualSection">
+    <div class="ledger-head">
+      <h2>Annuel</h2>
+      <div class="cat-total" id="annualTotal" style="color:var(--emerald)">0 $</div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Poste</th><th class="num">Montant</th><th>Échéance</th><th></th></tr>
+      </thead>
+      <tbody id="annualBody"></tbody>
+    </table>
+    <button class="add-row" id="addAnnualRow">+ ajouter une entrée annuelle</button>
+    <div class="annual-note" id="annualMonthlyNote"></div>
+  </section>
+
+  <footer class="bar">
+    <button id="addSectionBtn">+ nouvelle catégorie</button>
+    <button id="resetBtn">réinitialiser</button>
+  </footer>
+
+</div>
+
+<div class="toast" id="toast">Sauvegardé</div>
+
+<script>
+(function () {
+  const STORE_KEY = 'budget-ledger-v1';
+  const COLORS = ['emerald', 'slate', 'gold'];
+
+  const DEFAULT_DATA = {
+    sections: [
+      {
+        title: 'Dépenses fixes',
+        color: 'emerald',
+        rows: [
+          { label: 'Loyer', amount: 950, date: '01' },
+          { label: 'Assurance', amount: 90, date: '04' },
+          { label: 'Telus', amount: 77, date: '16' },
+          { label: 'Hydro-Québec', amount: 60, date: '22' }
+        ]
+      },
+      {
+        title: 'Crédit Master',
+        color: 'slate',
+        rows: [
+          { label: 'Fizz', amount: 33, date: '22' },
+          { label: 'Amazon', amount: 12, date: '28' },
+          { label: 'Netflix', amount: 20, date: '28' }
+        ]
+      },
+      {
+        title: 'Autres',
+        color: 'gold',
+        rows: [
+          { label: 'Gym', amount: 65, date: '' },
+          { label: 'Supplément', amount: 70, date: '' },
+          { label: 'Dyma', amount: 50, date: '' },
+          { label: 'Coiffeur', amount: 50, date: '' },
+          { label: 'VPS Hetzner', amount: 10, date: '' },
+          { label: 'Claude', amount: 32, date: '' }
+        ]
+      }
+    ],
+    annual: [
+      { label: 'Assurance habitation', amount: 302, date: '26/06' },
+      { label: 'Permis', amount: 26.25, date: '26/04' },
+      { label: 'Plaque', amount: 220, date: '31/08' }
+    ]
+  };
+
+  let data = null;
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) { data = JSON.parse(raw); return; }
+    } catch (e) { /* ignore, fall back to default */ }
+    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(data));
+      showToast('Sauvegardé');
+    } catch (e) { /* storage unavailable, continue without persistence */ }
+  }
+
+  let toastTimer = null;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 1100);
+  }
+
+  function fmt(n) {
+    if (isNaN(n)) n = 0;
+    return n.toLocaleString('fr-CA', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' $';
+  }
+
+  function sectionSum(rows) {
+    return rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  }
+
+  function render() {
+    const container = document.getElementById('sections');
+    container.innerHTML = '';
+
+    data.sections.forEach((section, si) => {
+      const sec = document.createElement('section');
+      sec.className = 'ledger ' + section.color;
+
+      const head = document.createElement('div');
+      head.className = 'ledger-head';
+      head.innerHTML =
+        '<h2 contenteditable="true" data-si="' + si + '" class="sec-title"></h2>' +
+        '<div class="cat-total"></div>';
+      head.querySelector('.sec-title').textContent = section.title;
+      head.querySelector('.cat-total').textContent = fmt(sectionSum(section.rows));
+      sec.appendChild(head);
+
+      head.querySelector('.sec-title').addEventListener('blur', (e) => {
+        data.sections[si].title = e.target.textContent.trim() || 'Sans titre';
+        save();
+      });
+
+      const table = document.createElement('table');
+      table.innerHTML =
+        '<thead><tr><th>Poste</th><th class="num">Montant</th><th>Date</th><th></th></tr></thead>' +
+        '<tbody></tbody>';
+      const tbody = table.querySelector('tbody');
+
+      section.rows.forEach((row, ri) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><input class="cell label" type="text" value="" placeholder="Poste"></td>' +
+          '<td class="num"><input class="cell amount" type="number" step="0.01" value="" placeholder="0"></td>' +
+          '<td><input class="cell date" type="text" value="" placeholder="jj"></td>' +
+          '<td class="del"><button class="del-btn" title="supprimer">×</button></td>';
+
+        tr.querySelector('.label').value = row.label;
+        tr.querySelector('.amount').value = row.amount;
+        tr.querySelector('.date').value = row.date;
+
+        tr.querySelector('.label').addEventListener('input', (e) => {
+          data.sections[si].rows[ri].label = e.target.value;
+        });
+        tr.querySelector('.label').addEventListener('change', save);
+
+        tr.querySelector('.amount').addEventListener('input', (e) => {
+          data.sections[si].rows[ri].amount = parseFloat(e.target.value) || 0;
+          head.querySelector('.cat-total').textContent = fmt(sectionSum(data.sections[si].rows));
+          updateGrandTotal();
+        });
+        tr.querySelector('.amount').addEventListener('change', save);
+
+        tr.querySelector('.date').addEventListener('input', (e) => {
+          data.sections[si].rows[ri].date = e.target.value;
+        });
+        tr.querySelector('.date').addEventListener('change', save);
+
+        tr.querySelector('.del-btn').addEventListener('click', () => {
+          data.sections[si].rows.splice(ri, 1);
+          save();
+          render();
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      sec.appendChild(table);
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-row';
+      addBtn.textContent = '+ ajouter une entrée';
+      addBtn.addEventListener('click', () => {
+        data.sections[si].rows.push({ label: '', amount: 0, date: '' });
+        save();
+        render();
+        const inputs = container.querySelectorAll('.ledger')[si].querySelectorAll('.label');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      });
+      sec.appendChild(addBtn);
+
+      container.appendChild(sec);
+    });
+
+    renderAnnual();
+    updateGrandTotal();
+  }
+
+  function renderAnnual() {
+    const tbody = document.getElementById('annualBody');
+    tbody.innerHTML = '';
+    data.annual.forEach((row, ri) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td><input class="cell label" type="text" value="" placeholder="Poste"></td>' +
+        '<td class="num"><input class="cell amount" type="number" step="0.01" value="" placeholder="0"></td>' +
+        '<td><input class="cell date" type="text" value="" placeholder="jj/mm"></td>' +
+        '<td class="del"><button class="del-btn" title="supprimer">×</button></td>';
+
+      tr.querySelector('.label').value = row.label;
+      tr.querySelector('.amount').value = row.amount;
+      tr.querySelector('.date').value = row.date;
+
+      tr.querySelector('.label').addEventListener('input', (e) => { data.annual[ri].label = e.target.value; });
+      tr.querySelector('.label').addEventListener('change', save);
+
+      tr.querySelector('.amount').addEventListener('input', (e) => {
+        data.annual[ri].amount = parseFloat(e.target.value) || 0;
+        updateAnnualTotal();
+      });
+      tr.querySelector('.amount').addEventListener('change', save);
+
+      tr.querySelector('.date').addEventListener('input', (e) => { data.annual[ri].date = e.target.value; });
+      tr.querySelector('.date').addEventListener('change', save);
+
+      tr.querySelector('.del-btn').addEventListener('click', () => {
+        data.annual.splice(ri, 1);
+        save();
+        renderAnnual();
+      });
+
+      tbody.appendChild(tr);
+    });
+    updateAnnualTotal();
+  }
+
+  function updateAnnualTotal() {
+    const total = sectionSum(data.annual);
+    document.getElementById('annualTotal').textContent = fmt(total);
+    document.getElementById('annualMonthlyNote').textContent =
+      'équivalent mensuel : ' + fmt(total / 12);
+  }
+
+  function updateGrandTotal() {
+    const total = data.sections.reduce((s, sec) => s + sectionSum(sec.rows), 0);
+    document.getElementById('grandTotal').textContent = fmt(total);
+  }
+
+  document.getElementById('addAnnualRow').addEventListener('click', () => {
+    data.annual.push({ label: '', amount: 0, date: '' });
+    save();
+    renderAnnual();
+    const inputs = document.getElementById('annualBody').querySelectorAll('.label');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+
+  document.getElementById('addSectionBtn').addEventListener('click', () => {
+    const color = COLORS[data.sections.length % COLORS.length];
+    data.sections.push({ title: 'Nouvelle catégorie', color: color, rows: [{ label: '', amount: 0, date: '' }] });
+    save();
+    render();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (confirm('Réinitialiser le registre aux valeurs de départ ?')) {
+      data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      save();
+      render();
+    }
+  });
+
+  load();
+  render();
+})();
+</script>
+</body>
+</html>
